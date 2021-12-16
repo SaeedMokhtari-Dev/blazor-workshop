@@ -16,6 +16,15 @@
             <div>My Orders</div>
         </NavLink>
     </AuthorizeView>
+    
+    <AuthorizeView Roles="Admin">
+        <Authorized>
+            <NavLink href="toppings/list" class="nav-tab">
+                <img src="img/topping.png"/>
+                <div>Toppings</div>
+            </NavLink>
+        </Authorized>
+    </AuthorizeView>
 
     <LoginDisplay />
 </div>

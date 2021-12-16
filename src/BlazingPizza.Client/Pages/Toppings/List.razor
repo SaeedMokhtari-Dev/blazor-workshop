@@ -1,0 +1,56 @@
+﻿@page "/toppings/list"
+@attribute [Authorize(Roles = "Admin")]
+@inject ToppingsClient _toppingsClient
+
+<div class="main">
+    <h1>Toppings</h1>
+    <small>Add as many Toppings as you wish.</small>
+    <div class="form-group">
+        <a class="btn btn-success" href="toppings/create"><i class="oi oi-plus"></i> Create New</a>
+    </div>
+    <br>
+    <div style="max-height: 50%; overflow-y: scroll">
+        <TableTemplate Items="_toppings">
+            <TableHeader>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Actions</th>
+            </TableHeader>
+            <RowTemplate Context="topping">
+                <td>@topping.Id</td>
+                <td>@topping.Name</td>
+                <td>@topping.GetFormattedPrice()</td>
+                <td>
+                    <div class="form-group">
+                            <a class="btn btn-info" href="toppings/edit"><i class="oi oi-edit"></i> Edit</a>
+                            <a class="btn btn-danger" href="toppings/delete"><i class="oi oi-remove"></i> Delete</a>
+                    </div>
+                </td>
+            </RowTemplate>
+        </TableTemplate>
+        </div>
+</div>
+
+@code {
+    private List<Topping> _toppings = new();
+    
+    protected override async Task OnParametersSetAsync()
+    {
+        _toppings = await LoadToppings();
+    }
+    
+    async Task<List<Topping>> LoadToppings()
+    {
+        var toppings = Enumerable.Empty<Topping>();
+        try
+        {
+            toppings = await _toppingsClient.GetToppings();
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+        }
+        return toppings.ToList();
+    }
+}

@@ -1,6 +1,9 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -25,11 +28,21 @@ namespace BlazingPizza.Server
             services.AddDbContext<PizzaStoreContext>(options =>
                 options.UseSqlite("Data Source=pizza.db"));
 
-            services.AddDefaultIdentity<PizzaStoreUser>(options => options.SignIn.RequireConfirmedAccount = true)
+            services.AddDefaultIdentity<PizzaStoreUser>(options =>
+                {
+                    options.SignIn.RequireConfirmedAccount = true;
+                })
+                .AddRoles<IdentityRole>()
                 .AddEntityFrameworkStores<PizzaStoreContext>();
 
             services.AddIdentityServer()
-                .AddApiAuthorization<PizzaStoreUser, PizzaStoreContext>();
+                .AddApiAuthorization<PizzaStoreUser, PizzaStoreContext>(options =>
+                {
+                    options.IdentityResources["openid"].UserClaims.Add("role");
+                    options.ApiResources.Single().UserClaims.Add("role");
+                });
+            
+            //JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Remove("role");
 
             services.AddAuthentication()
                 .AddIdentityServerJwt();

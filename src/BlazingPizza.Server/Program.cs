@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -18,6 +19,10 @@ namespace BlazingPizza.Server
                 if (db.Database.EnsureCreated())
                 {
                     SeedData.Initialize(db);
+                    
+                    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<PizzaStoreUser>>();
+                    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+                    SeedData.AddAdminUser(userManager, roleManager);
                 }
             }
 
