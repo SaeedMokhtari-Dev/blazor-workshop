@@ -1,0 +1,77 @@
+﻿@page "/toppings/edit/{ToppingId}"
+@using CurrieTechnologies.Razor.SweetAlert2
+@using Microsoft.Extensions.Logging
+@attribute [Authorize(Roles = "Admin")]
+@inject ToppingsClient _toppingsClient;
+@inject NavigationManager NavigationManager;  
+@inject SweetAlertService Swal;
+@inject ILogger<Add> Logger;
+  
+<div class="main">
+<h1>Create</h1>  
+<hr />  
+<div class="row">
+    <EditForm Model="@topping" OnValidSubmit="@EditTopping">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        
+    
+        <div class="form-group">
+            <label asp-for="name" class="control-label">Name</label>
+            <InputText id="name" class="form-control" @bind-Value="@topping.Name"/>
+        </div>
+        <div class="form-group">
+            <label asp-for="Price" class="control-label">Price</label>
+            <InputNumber id="price" class="form-control" @bind-Value="@topping.Price"/>
+        </div>
+    
+        <button type="submit" class="btn btn-primary" disabled="@isSubmitting">Save</button>
+        <button type="button" class="btn btn-danger" @onclick="Cancel">Cancel</button>
+    </EditForm>
+</div>  
+  </div>
+@functions {  
+    [Parameter]
+    public string ToppingId { get; set; }
+    
+    private bool isSubmitting=false;
+    Topping topping = new();
+    protected override async Task OnInitializedAsync()
+    {
+        topping = await _toppingsClient.GetTopping(Convert.ToInt32(ToppingId));
+    }
+
+    async Task EditTopping()
+    {
+        isSubmitting = true;
+        try
+        {
+            Logger.LogInformation($"EditTopping called {topping.Id + " " + topping.Name + " " + topping.Price}");
+            
+            bool succeed = await _toppingsClient.PutTopping(topping);
+
+            if (succeed)
+            {
+                await Swal.FireAsync("Successfully Updated", "", SweetAlertIcon.Success);
+                NavigationManager.NavigateTo("/toppings/list");
+            }
+            else
+            {
+                await Swal.FireAsync("Error", "", SweetAlertIcon.Error);    
+            }
+            
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }  
+    void Cancel()  
+    {  
+        NavigationManager.NavigateTo("/toppings/list");  
+    }  
+} 

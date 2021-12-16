@@ -1,16 +1,18 @@
 ﻿@page "/toppings/list"
+@using CurrieTechnologies.Razor.SweetAlert2
 @attribute [Authorize(Roles = "Admin")]
 @inject ToppingsClient _toppingsClient
+@inject SweetAlertService Swal;
+@inject IJSRuntime JS;
 
 <div class="main">
-    <h1>Toppings</h1>
     <small>Add as many Toppings as you wish.</small>
     <div class="form-group">
         <a class="btn btn-success" href="toppings/create"><i class="oi oi-plus"></i> Create New</a>
     </div>
     <br>
-    <div style="max-height: 50%; overflow-y: scroll">
-        <TableTemplate Items="_toppings">
+    <div style="max-height: 40%; overflow-y: scroll">
+        <TableTemplate @bind-Items="_toppings">
             <TableHeader>
                 <th>ID</th>
                 <th>Name</th>
@@ -23,34 +25,78 @@
                 <td>@topping.GetFormattedPrice()</td>
                 <td>
                     <div class="form-group">
-                            <a class="btn btn-info" href="toppings/edit"><i class="oi oi-edit"></i> Edit</a>
-                            <a class="btn btn-danger" href="toppings/delete"><i class="oi oi-remove"></i> Delete</a>
+                        <a class="btn btn-info" href="toppings/edit/@topping.Id"><i class="oi oi-edit"></i> Edit</a>
+                        <button class="btn btn-danger" @onclick=@(async () => await Delete(topping.Id))><i class="oi oi-remove"></i> Delete</button>
+                                            
                     </div>
                 </td>
             </RowTemplate>
         </TableTemplate>
-        </div>
+    </div>
+    <button id="refresh" style="display: none;" @onclick="refresh">ref</button>
 </div>
 
 @code {
-    private List<Topping> _toppings = new();
+    private List<Topping> _toppings;
     
     protected override async Task OnParametersSetAsync()
     {
-        _toppings = await LoadToppings();
+        await LoadToppings();
     }
     
-    async Task<List<Topping>> LoadToppings()
+    async Task LoadToppings()
     {
-        var toppings = Enumerable.Empty<Topping>();
+        _toppings = new List<Topping>();
         try
         {
-            toppings = await _toppingsClient.GetToppings();
+            _toppings = (await _toppingsClient.GetToppings()).ToList();
         }
         catch (AccessTokenNotAvailableException ex)
         {
             ex.Redirect();
         }
-        return toppings.ToList();
+    }
+    
+    async Task Delete(int id)
+    {
+        try
+        {
+            await Swal.FireAsync(new SweetAlertOptions
+            {
+                Title = "Are you sure?",
+                Text = "You will not be able to recover this record!",
+                Icon = SweetAlertIcon.Warning,
+                ShowCancelButton = true,
+                ConfirmButtonText = "Yes, delete it!",
+                CancelButtonText = "No, keep it"
+            }).ContinueWith( async swalTask =>
+            {
+                SweetAlertResult result = swalTask.Result;
+                if (!string.IsNullOrEmpty(result.Value))
+                {
+                    bool succeed = await _toppingsClient.DeleteTopping(id);
+                    if (succeed)
+                    {
+                        await LoadToppings();
+                        await Swal.FireAsync(
+                            "Deleted",
+                            "Selected record has been deleted.",
+                            SweetAlertIcon.Success
+                            );
+                        await JS.InvokeVoidAsync("clickElement", $"refresh");
+                    }
+                    else
+                        await Swal.FireAsync("Error", "", SweetAlertIcon.Error);
+                }
+            });
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+        }
+    }
+    void refresh()
+    {
+        
     }
 }

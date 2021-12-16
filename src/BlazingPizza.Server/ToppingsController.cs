@@ -10,7 +10,7 @@ namespace BlazingPizza.Server
 {
     [Route("toppings")]
     [ApiController]
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     public class ToppingsController : Controller
     {
         private readonly PizzaStoreContext _db;
@@ -24,12 +24,12 @@ namespace BlazingPizza.Server
         [HttpGet]
         public async Task<ActionResult<List<Topping>>> GetToppings()
         {
-            return Ok(await _db.Toppings.OrderBy(t => t.Id).ToListAsync());
+            return Ok(await _db.Toppings.OrderByDescending(t => t.Id).ToListAsync());
         }
         
         [HttpGet]
         [Route("{id}")]
-        public async Task<ActionResult<Topping>> DetailTopping([FromQuery] int id)
+        public async Task<ActionResult<Topping>> DetailTopping([FromRoute] int id)
         {
             var topping = await _db.Toppings.FindAsync(id);
             if (topping == null)
@@ -43,6 +43,7 @@ namespace BlazingPizza.Server
             if (!ModelState.IsValid) return ValidationProblem(ModelState);
                 
             await _db.Toppings.AddAsync(topping);
+            await _db.SaveChangesAsync();
             return Ok();
         }
 
@@ -57,7 +58,8 @@ namespace BlazingPizza.Server
         }
 
         [HttpDelete]
-        public async Task<ActionResult> DeleteTopping([FromQuery] int id)
+        [Route("{id}")]
+        public async Task<ActionResult> DeleteTopping([FromRoute] int id)
         {
             var topping = await _db.Toppings.FindAsync(id);
             if (topping == null) return NotFound();

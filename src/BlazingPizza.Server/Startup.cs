@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using CurrieTechnologies.Razor.SweetAlert2;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;

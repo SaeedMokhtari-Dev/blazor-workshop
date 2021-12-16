@@ -28,6 +28,10 @@
     <script src="_content/BlazingPizza.ComponentsLibrary/pushNotifications.js"></script>
     <script src="_content/BlazingPizza.ComponentsLibrary/deliveryMap.js"></script>
     <script src="_content/BlazingPizza.ComponentsLibrary/leaflet/leaflet.js"></script>
-    <script>navigator.serviceWorker.register('service-worker.js');</script>
+    <script src="_content/CurrieTechnologies.Razor.SweetAlert2/sweetAlert2.min.js"></script>
+    <script>
+        navigator.serviceWorker.register('service-worker.js');
+        clickElement = (id) => document.getElementById(id).click();
+    </script>
 </body>
 </html>
